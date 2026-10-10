@@ -7,18 +7,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace PascalSnailCurve_Khomenko
 {
-    public partial class Form1 : Form
+    public partial class PascalSnail : Form
     {
-        public Form1()
+        public PascalSnail()
         {
             InitializeComponent();
             pictureGraph.Paint += pictureGraph_Paint;
             UpdateCompareStatus();
+            SetStatus("Система координат ініціалізована. Змініть параметри a та b для дослідження");
         }
         private float scale = 40f; // масштабування графіка (40 пікселів == 1 одиниця)
         private float offsetX = 0f; // зсув центру графіка
@@ -101,7 +103,7 @@ namespace PascalSnailCurve_Khomenko
             List<PointF> points = new List<PointF>();
             double step = 0.01;
 
-            for (double t = 0; t <= 2 * Math.PI; t += step)
+            for (double t = 0; t < 2 * Math.PI; t += step)
             {
                 //за рівнянням:
                 double x = a * Math.Cos(2 * t) + b * Math.Cos(t);
@@ -128,7 +130,7 @@ namespace PascalSnailCurve_Khomenko
             bool enabled = checkCompare.Checked;
             numA2.Enabled = enabled;
             numB2.Enabled = enabled;
-        }      
+        }
         private void buttonReset_Click(object sender, EventArgs e)
         {
             scale = 40f;
@@ -140,6 +142,7 @@ namespace PascalSnailCurve_Khomenko
             numB2.Value = 3.0M;
             checkCompare.Checked = false;
             pictureGraph.Invalidate();
+            SetStatus("Створено новий об'єкт моделювання. Параметри та масштаб скинуто до початкових");
         }
 
         private void statusStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -156,29 +159,41 @@ namespace PascalSnailCurve_Khomenko
         {
             offsetY += 30;
             pictureGraph.Invalidate();
+            SetStatus("СК зміщено вгору");
         }
 
         private void buttonRight_Click(object sender, EventArgs e)
         {
             offsetX -= 30;
             pictureGraph.Invalidate();
+            SetStatus("СК зміщено вправо");
         }
 
         private void buttonDown_Click(object sender, EventArgs e)
         {
             offsetY -= 30;
             pictureGraph.Invalidate();
+            SetStatus("СК зміщено вниз");
         }
 
         private void buttonLeft_Click(object sender, EventArgs e)
         {
             offsetX += 30;
             pictureGraph.Invalidate();
+            SetStatus("СК зміщено вліво");
         }
 
         private void checkCompare_CheckedChanged(object sender, EventArgs e)
         {
             UpdateCompareStatus();
+            if (checkCompare.Checked)
+            {
+                SetStatus("Режим порівняння увімкнено: нанесіть другу криву з новими параметрами");
+            }
+            else
+            {
+                SetStatus("Режим порівняння вимкнено");
+            }
             pictureGraph.Invalidate();
         }
 
@@ -186,15 +201,35 @@ namespace PascalSnailCurve_Khomenko
         {
             scale *= 1.25f;
             pictureGraph.Invalidate();
+            SetStatus($"Масштаб збільшено. Поточний масштаб: {scale:0.00} пікс/од.");
         }
 
         private void buttonZoomOut_Click(object sender, EventArgs e)
         {
             scale /= 1.25f;
             pictureGraph.Invalidate();
+            SetStatus($"Масштаб зменшено. Поточний масштаб: {scale:0.00} пікс/од.");
         }
         private void Parameters_ValueChanged(object sender, EventArgs e)
         {
+            double a = (double)numA1.Value;
+            double b = (double)numB1.Value;
+            string infoType;
+            if (a > b) infoType = "з петлею";
+            else if (a < b) infoType = "з угином";
+            else infoType = "без петлі та угину";
+            SetStatus($"Параметри Кривої 1 змінено: a = {a}, b = {b} | Вид кривої: {infoType} | Масштаб: {scale:0.00} пікс/од.");
+            pictureGraph.Invalidate();
+        }
+        private void Parameters_ValueChanged2(object sender, EventArgs e)
+        {
+            double a = (double)numA2.Value;
+            double b = (double)numB2.Value;
+            string infoType;
+            if (a > b) infoType = "з петлею";
+            else if (a < b) infoType = "з угином";
+            else infoType = "без петлі та угину";
+            SetStatus($"Параметри Кривої 2 змінено: a = {a}, b = {b} | Вид кривої: {infoType} | Масштаб: {scale:0.00} пікс/од.");
             pictureGraph.Invalidate();
         }
         private void buttonExport_Click(object sender, EventArgs e)
@@ -206,8 +241,26 @@ namespace PascalSnailCurve_Khomenko
             {
                 sfd.Filter = "PNG Image|*.png";
                 if (sfd.ShowDialog() == DialogResult.OK) bmp.Save(sfd.FileName);
+                SetStatus($"Результати успішно експортовано у файл: {sfd.FileName}");
             }
             bmp.Dispose(); //видалення малюнка
+        }
+        private void SetStatus(string message)
+        {
+            if (toolStripStatusLabel1 != null)
+            {
+                toolStripStatusLabel1.Text = message;
+            }
+        }
+
+        private void groupBox2_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panelConrol_Paint(object sender, PaintEventArgs e)
+        {
+
         }
     }
 }
