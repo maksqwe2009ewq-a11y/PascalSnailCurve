@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Windows.Forms.LinkLabel;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace PascalSnailCurve_Khomenko
@@ -19,14 +20,14 @@ namespace PascalSnailCurve_Khomenko
             pictureGraph.Paint += pictureGraph_Paint;
             UpdateCompareStatus();
         }
-        private float scale = 40f; 
-        private float offsetX = 0f; 
+        private float scale = 40f; // масштабування графіка (40 пікселів == 1 одиниця)
+        private float offsetX = 0f; // зсув центру графіка
         private float offsetY = 0f;
-        private void pictureGraph_Paint(object sender, PaintEventArgs e)
+        private void pictureGraph_Paint(object sender, PaintEventArgs e) // все, що малюється на графіку
         {
-            Graphics g = e.Graphics;
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            DrawcoordinateAxis(g);
+            Graphics graphic = e.Graphics;
+            graphic.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias; //зглажування країв замість пікселів 
+            DrawСoordinateAxis(graphic);
 
             double a1 = (double)numA1.Value;
             double b1 = (double)numB1.Value;
@@ -39,18 +40,68 @@ namespace PascalSnailCurve_Khomenko
                 // Малюємо другу криву Паскаля
             }
         }
+        private void DrawСoordinateAxis(Graphics graphic)
+        {
+            int w = pictureGraph.Width;
+            int h = pictureGraph.Height;
+
+            PointF center = CartesianCoordTransform(0, 0, w, h); // центр координат
+
+            using (Pen axis = new Pen(Color.Black, 1.5f)) //осі координат
+            {
+                graphic.DrawLine(axis, 0, center.Y, w, center.Y);
+                graphic.DrawLine(axis, center.X, 0, center.X, h);
+            }
+            using (Pen line = new Pen(Color.Black, 1.5f)) // лінії сітки
+            {
+                float step = scale; //крок сітки
+                float valueStep = 1f;
+                if (step < 10)
+                {
+                    step = 10;
+                    valueStep = 10f / scale;
+                }
+
+                //X
+                float currentValue = valueStep;
+                for (float x = center.X + step; x < w; x += step)
+                {
+                    graphic.DrawLine(line, x, center.Y - 4, x, center.Y + 4);
+                    currentValue += valueStep;
+                }
+                currentValue = -valueStep;
+                for (float x = center.X - step; x > 0; x -= step)
+                {
+                    graphic.DrawLine(line, x, center.Y - 4, x, center.Y + 4);
+                    currentValue -= valueStep;
+                }
+                //Y
+                currentValue = valueStep;
+                for (float y = center.Y - step; y > 0; y -= step)
+                {
+                    graphic.DrawLine(line, center.X - 4, y, center.X + 4, y);
+                    currentValue += valueStep;
+                }
+                currentValue = -valueStep;
+                for (float y = center.Y + step; y < h; y += step)
+                {
+                    graphic.DrawLine(line, center.X - 4, y, center.X + 4, y);
+                    currentValue -= valueStep;
+                }
+            }
+        }
+        private PointF CartesianCoordTransform(double x, double y, int w, int h)
+        {
+            float screenX = w / 2f + offsetX + (float)(x * scale); // перетворення + центрування графіка на середину вікна
+            float screenY = h / 2f + offsetY - (float)(y * scale);
+            return new PointF(screenX, screenY);
+        }
         private void UpdateCompareStatus()
         {
             bool enabled = checkCompare.Checked;
             numA2.Enabled = enabled;
             numB2.Enabled = enabled;
-        }
-        private void DrawcoordinateAxis(Graphics g)
-        {
-            int w = pictureGraph.Width;
-            int h = pictureGraph.Height;
-        }
-       
+        }      
         private void buttonReset_Click(object sender, EventArgs e)
         {
             scale = 40f;
