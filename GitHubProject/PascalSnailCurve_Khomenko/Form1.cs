@@ -160,7 +160,7 @@ namespace PascalSnailCurve_Khomenko
 
         private void buttonRight_Click(object sender, EventArgs e)
         {
-            offsetX += 30;
+            offsetX -= 30;
             pictureGraph.Invalidate();
         }
 
@@ -172,7 +172,7 @@ namespace PascalSnailCurve_Khomenko
 
         private void buttonLeft_Click(object sender, EventArgs e)
         {
-            offsetX -= 30;
+            offsetX += 30;
             pictureGraph.Invalidate();
         }
 
@@ -199,7 +199,15 @@ namespace PascalSnailCurve_Khomenko
         }
         private void buttonExport_Click(object sender, EventArgs e)
         {
+            Bitmap bmp = new Bitmap(pictureGraph.Width, pictureGraph.Height); //пустий малюнок
+            pictureGraph.DrawToBitmap(bmp, new Rectangle(0, 0, pictureGraph.Width, pictureGraph.Height)); //перемалювання графіка на малюнок
 
+            using (SaveFileDialog sfd = new SaveFileDialog()) //збереження
+            {
+                sfd.Filter = "PNG Image|*.png";
+                if (sfd.ShowDialog() == DialogResult.OK) bmp.Save(sfd.FileName);
+            }
+            bmp.Dispose(); //видалення малюнка
         }
     }
 }
